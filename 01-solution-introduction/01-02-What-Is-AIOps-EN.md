@@ -5,9 +5,22 @@
 
 ## Core Insight
 
+| # | Dimension | Insight |
+| --- | --- | --- |
+| ① | **Paradigm Shift** | Operations is moving from the "manual era" to the "autonomous operations era." |
+| ② | **Architecture Essence** | Use **LLM** as the engine (brain), and **MCP / Skills** as the nerve tentacles that connect existing observability, automation, and ITSM capabilities. The result is an intelligent operations system that is conversational, orchestratable, executable, and governable. |
+| ③ | **Strategic Value** | **Security and compliance** are the baseline, while **data governance + automation** are the foundation. This is not merely a technical upgrade, but a strategic business investment. |
+
+## AIOps Reference Architecture
+<img width="2552" height="1273" alt="image" src="https://github.com/user-attachments/assets/ef43e55e-4eea-48df-abed-d85e21e963e7" />
+
+
+
+## Five Core Competencies
+
 **Five core competencies**: from reactive response to intelligent operations.
 
-The upgrade of the operations paradigm depends on the deep integration of the **brain (AI)** and the **nerve tentacles (automation)**—see clearly, interact naturally, then triage, analyze, and execute with trust, all within enterprise-grade security boundaries.
+The upgrade of the operations paradigm depends on the deep integration of the **brain (AI)** and the **nerve tentacles (automation)**: see clearly, interact naturally, then triage, analyze, and execute with trust, all within enterprise-grade security boundaries.
 
 ---
 
