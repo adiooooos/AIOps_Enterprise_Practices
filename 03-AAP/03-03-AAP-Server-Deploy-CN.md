@@ -104,21 +104,55 @@ ansible-playbook -i inventory-growth ansible.containerized_installer.install
 
 ## 4. 安装后验证
 
-### 4.1 检查容器状态
+> 以 **`admin`** 用户 SSH 登录后执行（不要用 `sudo su` 切换用户后再跑 `podman`）。
+
+### 4.1 检查容器状态（主要验证手段）
 
 ```bash
 podman ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
-期望可见与 Gateway、Controller、Hub、EDA、Database、Redis、MCP 等相关的运行中容器（具体名称因版本略有差异）。
+**通过标准**：所有核心容器状态为 `Up`，且包含 `ansiblemcp`。DEMO 环境实测示例：
 
-### 4.2 检查 systemd 用户服务
-
-```bash
-systemctl --user list-units --type=service | grep -i automation
+```
+NAMES                               STATUS      PORTS
+postgresql                          Up 2 weeks  5432/tcp
+redis-unix                          Up 2 weeks  6379/tcp
+redis-tcp                           Up 2 weeks  6379/tcp
+automation-gateway-proxy            Up 2 weeks
+automation-gateway                  Up 2 weeks
+receptor                            Up 2 weeks
+automation-controller-rsyslog       Up 2 weeks  8052/tcp
+automation-controller-task          Up 2 weeks  8052/tcp
+automation-controller-web           Up 2 weeks  8052/tcp
+automation-eda-api                  Up 2 weeks
+automation-eda-daphne               Up 2 weeks
+automation-eda-web                  Up 2 weeks  8080/tcp, 8443/tcp
+automation-eda-worker-1             Up 2 weeks
+automation-eda-worker-2             Up 2 weeks
+automation-eda-activation-worker-1  Up 2 weeks
+automation-eda-activation-worker-2  Up 2 weeks
+automation-eda-scheduler            Up 2 weeks
+automation-hub-api                  Up 2 weeks
+automation-hub-content              Up 2 weeks
+automation-hub-web                  Up 2 weeks  8080/tcp, 8443/tcp
+automation-hub-worker-1             Up 2 weeks
+automation-hub-worker-2             Up 2 weeks
+ansiblemcp                          Up 2 weeks  8080/tcp, 8086/tcp
 ```
 
-### 4.3 访问 Web UI
+| 容器组 | 关键容器名 |
+| --- | --- |
+| **Gateway** | `automation-gateway`、`automation-gateway-proxy` |
+| **Controller** | `automation-controller-web`、`automation-controller-task` |
+| **Hub** | `automation-hub-web`、`automation-hub-api` |
+| **EDA** | `automation-eda-web`、`automation-eda-worker-*` |
+| **Database / Redis** | `postgresql`、`redis-tcp` |
+| **MCP** | `ansiblemcp` |
+
+> `PORTS` 列显示的是**容器内部**端口。
+
+### 4.2 访问 Web UI
 
 | 项目 | 值 |
 | --- | --- |
@@ -128,19 +162,10 @@ systemctl --user list-units --type=service | grep -i automation
 
 ```bash
 curl -k -I https://aap26.example.com
+# 期望：HTTP/1.1 200 OK，server: envoy
 ```
 
-浏览器访问应呈现 AAP Gateway 登录页。许可激活与 UI 细项配置见 [03-04 AAP 配置](03-04-AAP-Configuration-CN.md)。
-
-### 4.4 MCP 端点（安装后预留）
-
-Ansible MCP Server 默认监听 **3000** 端口。安装完成后可初步探测：
-
-```bash
-curl -s -o /dev/null -w "%{http_code}" http://aap26.example.com:3000/mcp/job_management
-```
-
-完整 MCP → AI Agent 接线见 [03-05 AAP MCP For Agent](03-05-AAP-MCP-For-Agent-CN.md)。
+浏览器访问应呈现 AAP Gateway 登录页。许可激活、MCP Token 与 AI Agent 接线见 [03-04 AAP 配置](03-04-AAP-Configuration-CN.md)。
 
 ---
 
@@ -150,11 +175,9 @@ curl -s -o /dev/null -w "%{http_code}" http://aap26.example.com:3000/mcp/job_man
 | --- | --- | --- |
 | 1 | Playbook | `ansible.containerized_installer.install` 无 failed 任务 |
 | 2 | 容器 | `podman ps` 显示核心 AAP 容器 Running |
-| 3 | Gateway UI | `https://<FQDN>` 可打开登录页 |
+| 3 | Gateway UI | `curl -k -I https://<FQDN>` 返回 `200 OK`；浏览器可打开登录页 |
 | 4 | 登录 | `admin` / 配置密码可进入 |
-| 5 | MCP 组 | inventory 中 `[ansiblemcp]` 已包含目标主机 |
-| 6 | MCP 端口 | `:3000` 端点可连通（待 Token 配置后完整验签） |
-| 7 | 许可 | 待 [03-04](03-04-AAP-Configuration-CN.md) 激活订阅或 Manifest |
+| 5 | 许可 | 待 [03-04](03-04-AAP-Configuration-CN.md) 激活订阅或 Manifest |
 
 ---
 
