@@ -329,31 +329,39 @@ Git 提交后，在 UI 中配置相应 **Rulebook Activations**，用于 Event S
 
 配置 **Automation Decisions** 用于 Git 认证的 Credentials。
 
-<图片放在这里>
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/65a8c2b7-d4a7-4489-8930-3e0a856b1ff9" />
+
 
 ### 4.2 EDA Project
 
 配置 **Automation Decisions** 的 EDA Project（SCM URL、Branch `main`、子目录 `rulebooks/` 等）。
 
-<图片放在这里>
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/253f777a-67b5-4b5d-b93f-134a3cc4f492" />
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/673d91f8-0d19-4b78-af72-cadcc6620921" />
+
 
 ### 4.3 Event Stream Credentials
 
 配置用于认证 **EDA Event Stream** 的 Credentials。
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/deb8e14f-a958-44e6-a3f9-a3fbd87d5ef0" />
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/5f3e4383-9df4-4681-8adf-acd7debb75c1" />
 
-<图片放在这里>
+
 
 ### 4.4 Rulebook Credentials
 
 配置用于认证 **EDA Rulebook** 的 Credentials。
 
-<图片放在这里>
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/c1e0ff3d-dd29-45e9-95a7-a0830ef2d8aa" />
+
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/6b772ecd-a327-4d0f-ab6c-c4537169392f" />
 
 ### 4.5 EDA Event Stream
 
 配置 EDA Event Stream。
 
-<图片放在这里>
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/3ee52f62-9986-4729-b613-44fe74a4a153" />
+
 
 记录 Event Stream 的 **POST URL**（后续 Rulebook / 测试需用到）。DEMO 示例：
 
@@ -410,7 +418,8 @@ GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
 1. 在 UI **Sync EDA Project**
 2. 配置 **Rulebook Activation**（关联 Event Stream、Rulebook 文件等）
 
-<图片放在这里>
+<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/45e9f0ec-f2b6-4a5f-875f-f7b16a224a1c" />
+
 
 ### 5.3 命令行测试 Event Stream
 
@@ -433,9 +442,10 @@ curl -k -X POST \
 
 在 Gateway UI 查看 Rulebook Activation 的 Event 详情，确认 payload 已被 Rulebook 接收并执行。
 
-<图片放在这里>
+<img width="751" height="484" alt="image" src="https://github.com/user-attachments/assets/a3c1ba7a-e2b9-48ce-9e5e-34d91b6a6f3d" />
 
-<图片放在这里>
+<img width="747" height="481" alt="image" src="https://github.com/user-attachments/assets/d9e4d9ea-d7a3-4551-9be5-9a84102b52e5" />
+
 
 ---
 
