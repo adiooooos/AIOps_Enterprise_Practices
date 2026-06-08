@@ -328,23 +328,24 @@ Git 提交后，在 UI 中配置相应 **Rulebook Activations**，用于 Event S
 ### 4.1 Git 认证 Credentials
 
 配置 **Automation Decisions** 用于 Git 认证的 Credentials。
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/8d41bfc4-4142-42e2-a65b-976a05d6a6c2" />
 
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/65a8c2b7-d4a7-4489-8930-3e0a856b1ff9" />
+
 
 
 ### 4.2 EDA Project
 
 配置 **Automation Decisions** 的 EDA Project（SCM URL、Branch `main`、子目录 `rulebooks/` 等）。
 
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/253f777a-67b5-4b5d-b93f-134a3cc4f492" />
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/673d91f8-0d19-4b78-af72-cadcc6620921" />
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/018493e6-2941-424e-affc-0ca8c98ae5d6" />
+
 
 
 ### 4.3 Event Stream Credentials
 
 配置用于认证 **EDA Event Stream** 的 Credentials。
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/deb8e14f-a958-44e6-a3f9-a3fbd87d5ef0" />
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/5f3e4383-9df4-4681-8adf-acd7debb75c1" />
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/d14061c0-3609-42a9-b3f8-931cbc5364a7" />
+
 
 
 
@@ -352,15 +353,16 @@ Git 提交后，在 UI 中配置相应 **Rulebook Activations**，用于 Event S
 
 配置用于认证 **EDA Rulebook** 的 Credentials。
 
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/c1e0ff3d-dd29-45e9-95a7-a0830ef2d8aa" />
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/3c5c16f4-1cd7-4f5e-91a6-dad0701f33d2" />
 
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/6b772ecd-a327-4d0f-ab6c-c4537169392f" />
+
 
 ### 4.5 EDA Event Stream
 
 配置 EDA Event Stream。
 
-<img width="1016" height="488" alt="image" src="https://github.com/user-attachments/assets/3ee52f62-9986-4729-b613-44fe74a4a153" />
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/8b482df1-8de9-488f-af8e-c06a0679b186" />
+
 
 
 记录 Event Stream 的 **POST URL**（后续 Rulebook / 测试需用到）。DEMO 示例：
