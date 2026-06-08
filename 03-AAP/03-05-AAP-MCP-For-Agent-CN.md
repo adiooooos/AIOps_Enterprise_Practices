@@ -8,7 +8,7 @@
 | # | 维度 | 洞察 |
 | --- | --- | --- |
 | ① | **后置配置** | MCP 在 [03-03](03-03-AAP-Server-Deploy-CN.md) 随平台安装；本章在 [03-04](03-04-AAP-Configuration-CN.md) 完成后，将 MCP 端点接入 **Cursor / n8n** 等 AI Agent。也可在 AI Agent 部署就绪后再做。 |
-| ② | **端口与路径** | 容器化 AAP 2.6 的 MCP 暴露在主机 **8448/HTTPS**；路径为 `/<toolset>/mcp`（**不是** `:3000/mcp/<toolset>`）。 |
+| ② | **以实测为准** | AIOps DEMO 实测可用 **`http://<IP>:3000/mcp/<toolset>`**（与 Cursor `mcp.json` 一致）；Red Hat 部分文档另写 **8448/HTTPS** + `/<toolset>/mcp`，见 §2.1。 |
 | ③ | **双因素鉴权** | 连接需 **API Token**（继承用户 RBAC）+ inventory 中 MCP 服务端权限（DEMO：`mcp_allow_write_operations=true`）。 |
 
 ## 本章目标
@@ -20,7 +20,7 @@
 | **适用版本** | AAP **2.6.4+**（MCP Technology Preview） |
 | **MCP 容器** | `ansiblemcp`（[03-03](03-03-AAP-Server-Deploy-CN.md) inventory 已启用） |
 | **示例节点** | `aap26.example.com` · `10.210.65.24` |
-| **MCP Base URL** | `https://aap26.example.com:8448` |
+| **MCP Base URL（DEMO 实测）** | `http://10.210.65.24:3000` |
 
 ---
 
@@ -50,24 +50,29 @@
 
 ## 2. MCP 端点一览
 
-容器化安装的 Ansible MCP Server 通过 **8448 端口（HTTPS）** 暴露。DEMO 环境 Toolset 端点如下：
+### 2.1 为何文档里会出现两种 URL？
+
+| 来源 | 格式示例 | 说明 |
+| --- | --- | --- |
+| **AIOps DEMO 实测（推荐）** | `http://10.210.65.24:3000/mcp/job_management` | 与 [ansible/aap-mcp-server](https://github.com/ansible/aap-mcp-server) 默认一致；**本环境 Cursor 已验证可调用 Job API** |
+| **Red Hat 容器化安装文档** | `https://aap26.example.com:8448/job_management/mcp` | 部分 AAP 2.6 安装指南中的暴露方式；路径顺序与端口可能因 bundle 版本而异 |
+
+> **结论**：AI Agent 配置**以你环境实测为准**。若 Cursor / n8n 已能列出 MCP 工具并查询 Job，则**无需**改为 8448。两种格式差异在于 **端口（3000 vs 8448）**、**协议（HTTP vs HTTPS）**、**路径顺序（`/mcp/<toolset>` vs `/<toolset>/mcp`）**。
+
+### 2.2 DEMO 环境端点（实测可用）
 
 | Toolset | 用途 | Endpoint URL |
 | --- | --- | --- |
-| **Job Management** | 列出 / 启动作业模板、查看 Job 状态与日志 | `https://aap26.example.com:8448/job_management/mcp` |
-| **Inventory Management** | 查询清单、主机、分组 | `https://aap26.example.com:8448/inventory_management/mcp` |
-| **System Monitoring** | 平台健康检查、Job 日志、审计 | `https://aap26.example.com:8448/system_monitoring/mcp` |
-| **User Management** | 用户、团队、RBAC 管理 | `https://aap26.example.com:8448/user_management/mcp` |
-| **Security / Compliance** | 凭据与安全策略查看 / 管理 | `https://aap26.example.com:8448/security_compliance/mcp` |
-| **Platform Configuration** | 系统设置、License、Execution Environment | `https://aap26.example.com:8448/platform_configuration/mcp` |
+| **Job Management** | 列出 / 启动作业模板、查看 Job 状态与日志 | `http://10.210.65.24:3000/mcp/job_management` |
+| **Inventory Management** | 查询清单、主机、分组 | `http://10.210.65.24:3000/mcp/inventory_management` |
+| **System Monitoring** | 平台健康检查、Job 日志、审计 | `http://10.210.65.24:3000/mcp/system_monitoring` |
+| **User Management** | 用户、团队、RBAC 管理 | `http://10.210.65.24:3000/mcp/user_management` |
+| **Security / Compliance** | 凭据与安全策略查看 / 管理 | `http://10.210.65.24:3000/mcp/security_compliance` |
+| **Platform Configuration** | 系统设置、License、Execution Environment | `http://10.210.65.24:3000/mcp/platform_configuration` |
 
-> **路径格式**：`https://<FQDN>:8448/<toolset>/mcp`。端口 **3000** 为独立开发模式默认值，**不适用于**本 DEMO 容器化部署。
+也可用 FQDN：`http://aap26.example.com:3000/mcp/job_management`（需 `/etc/hosts` 或 DNS 可解析）。
 
-连通性快速探测（无 Token 时返回 401/403 亦表示服务可达）：
-
-```bash
-curl -k -s -o /dev/null -w "%{http_code}\n" https://aap26.example.com:8448/job_management/mcp
-```
+> **注意**：对 `:3000` 做简单 `curl` GET 可能返回 **404**，这不代表 MCP 不可用——MCP 客户端使用带 Bearer Token 的 **POST** 协议，与裸 `curl` 探测行为不同。**以 AI Agent 能否调用工具为准。**
 
 ---
 
@@ -110,44 +115,44 @@ curl -k -s -o /dev/null -w "%{http_code}\n" https://aap26.example.com:8448/job_m
 ```json
 {
   "mcpServers": {
-    "aap-mcp-job-mgmt": {
+    "aap-mcp-job-management": {
       "type": "http",
-      "url": "https://aap26.example.com:8448/job_management/mcp",
+      "url": "http://10.210.65.24:3000/mcp/job_management",
       "headers": {
         "Authorization": "Bearer <YOUR_AAP_TOKEN>"
       }
     },
     "aap-mcp-inventory": {
       "type": "http",
-      "url": "https://aap26.example.com:8448/inventory_management/mcp",
+      "url": "http://10.210.65.24:3000/mcp/inventory_management",
       "headers": {
         "Authorization": "Bearer <YOUR_AAP_TOKEN>"
       }
     },
     "aap-mcp-monitor": {
       "type": "http",
-      "url": "https://aap26.example.com:8448/system_monitoring/mcp",
+      "url": "http://10.210.65.24:3000/mcp/system_monitoring",
       "headers": {
         "Authorization": "Bearer <YOUR_AAP_TOKEN>"
       }
     },
     "aap-mcp-users": {
       "type": "http",
-      "url": "https://aap26.example.com:8448/user_management/mcp",
+      "url": "http://10.210.65.24:3000/mcp/user_management",
       "headers": {
         "Authorization": "Bearer <YOUR_AAP_TOKEN>"
       }
     },
     "aap-mcp-security": {
       "type": "http",
-      "url": "https://aap26.example.com:8448/security_compliance/mcp",
+      "url": "http://10.210.65.24:3000/mcp/security_compliance",
       "headers": {
         "Authorization": "Bearer <YOUR_AAP_TOKEN>"
       }
     },
     "aap-mcp-platform": {
       "type": "http",
-      "url": "https://aap26.example.com:8448/platform_configuration/mcp",
+      "url": "http://10.210.65.24:3000/mcp/platform_configuration",
       "headers": {
         "Authorization": "Bearer <YOUR_AAP_TOKEN>"
       }
@@ -156,16 +161,16 @@ curl -k -s -o /dev/null -w "%{http_code}\n" https://aap26.example.com:8448/job_m
 }
 ```
 
-> 将 `<YOUR_AAP_TOKEN>` 替换为 §3 创建的 Token。DEMO 若 inventory 设置了 `mcp_ignore_certificate_errors=true`，Cursor 侧通常可直连自签证书；生产环境请配置正式 TLS。
+> 将 `<YOUR_AAP_TOKEN>` 替换为 §3 创建的 Token。上表 URL 与 AIOps DEMO 现网 Cursor 配置一致。
 
-**最小示例**（仅 Job Management）：
+**最小示例**（仅 Job Management，与现网 `mcp.json` 相同结构）：
 
 ```json
 {
   "mcpServers": {
-    "aap-mcp-job-mgmt": {
+    "aap-mcp-job-management": {
       "type": "http",
-      "url": "https://aap26.example.com:8448/job_management/mcp",
+      "url": "http://10.210.65.24:3000/mcp/job_management",
       "headers": {
         "Authorization": "Bearer <YOUR_AAP_TOKEN>"
       }
@@ -181,7 +186,7 @@ curl -k -s -o /dev/null -w "%{http_code}\n" https://aap26.example.com:8448/job_m
 | 配置项 | 值 |
 | --- | --- |
 | **Transport** | HTTP |
-| **URL** | 如 `https://aap26.example.com:8448/job_management/mcp` |
+| **URL** | 如 `http://10.210.65.24:3000/mcp/job_management` |
 | **Authorization** | `Bearer <YOUR_AAP_TOKEN>` |
 
 ---
@@ -208,7 +213,8 @@ AI 应返回 MCP 工具列表或 Job 查询结果。
 
 | 现象 | 可能原因 | 处理 |
 | --- | --- | --- |
-| `:3000` 返回 404 | 端口错误 | 改用 **8448** + HTTPS |
+| `curl :3000` 返回 404 | 裸 GET 非 MCP 协议 | 正常；以 AI Agent 能否调用工具为准 |
+| AI Agent 连不上 | URL / Token 错误 | 对照 §2.2；或尝试 RH 文档格式 `https://<FQDN>:8448/<toolset>/mcp` |
 | 连接拒绝 | `ansiblemcp` 未运行 | `podman ps --filter name=ansiblemcp` |
 | 401 / 403 | Token 无效或过期 | 重新创建 Token 并更新 Agent 配置 |
 | 400 Bad Request | 自签证书校验失败 | inventory 设 `mcp_ignore_certificate_errors=true`，或配置正式证书 |
