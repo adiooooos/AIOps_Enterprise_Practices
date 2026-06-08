@@ -1,4 +1,4 @@
-# AIOps DEMO Center 分步指南 — 编写蓝图（Blueprint）
+# AIOps DEMO Center Step by step Guide — Blueprint
 
 > **文档性质**：本文件是整套 *AIOps DEMO Center Deploy & Setup Step-by-Step Guide* 的**总纲与规范**，后续所有章节文档均按此执行。  
 > **状态**：规划稿 v1.1（结构化优化）  
@@ -40,19 +40,13 @@
 
 > 架构总览可参考：`01_AAP2.6.exmaple.com/00-AIOPS架构.md`。
 
-### 2.2 不在本系列重复的内容
-
-- **Slides / 演讲稿**：留在 `10_AIOPS_Solution_Slides/`，本系列仅做**交叉引用**（如第 2 章 Solution Introduction）。
-- **AnsibleClaw 专题**：独立在 `2001_Ansibleclaw/`，可在 AAP 章节末尾增加「延伸阅读」链接。
-
----
 
 ## 3. 编写与发布规范
 
 ### 3.1 输出位置
 
 - **本地主目录**：`01_AIOPS_DEMO_CENTER部署及配置/90_AIOps_DEMO_StepbyStep_Guide/`
-- **GitHub**：通过 Cursor MCP（GitHub）同步至 [AIOps_Enterprise_Practices](https://github.com/adiooooos/AIOps_Enterprise_Practices)；建议仓库内使用**英文路径**（见 §4.2），与国际化读者习惯一致。
+- **GitHub**：通过 Cursor MCP（GitHub）同步至 [AIOps_Enterprise_Practices](https://github.com/adiooooos/AIOps_Enterprise_Practices)；建议仓库内使用**英文路径**（见 §4.2）
 
 ### 3.2 文件命名约定
 
@@ -83,22 +77,6 @@
 ## 参考 / References
 ```
 
-### 3.4 截图与 GitHub
-
-- 优先将 `images/` 一并提交到 GitHub，文档内使用相对路径引用。
-- 若单图过大或涉密，在文中注明「图见本地目录 xxx，GitHub 需手动补传」，并在 PR 检查清单中勾选。
-
-### 3.5 写作顺序（依赖关系）
-
-建议按以下顺序撰写，避免后文引用前文未发布的章节：
-
-```text
-00-Blueprint → 03-Architecture → 04-AAP → 05-Prometheus → 06-Chaos
-    → 07-EDA → 08-Triage → 09-n8n → 10-MCP-SSH → 11-Agent-Workflow
-    → 02-Solution-Introduction（可与 03 并行，偏概念）
-```
-
----
 
 ## 4. 目录结构（优化后）
 
@@ -151,7 +129,7 @@ AIOps_Enterprise_Practices/
 
 ### Part I — AIOps Solution Introduction（概念，可精简）
 
-> 与论坛 Slides 对齐，**不重复粘贴全文**，以「要点 + 链接到 Slides/PDF」为主。
+
 
 
 | 节   | 主题                           | 建议文件名                       | 状态  |
@@ -252,56 +230,7 @@ AIOps_Enterprise_Practices/
 | 11.1 | AIOPS Agent n8n Workflow 配置及测试 | `11-01-Agent-Workflow-E2E-CN.md` | 端到端：告警 → EDA → n8n → Chat →（可选）AAP |
 
 
----
 
-## 6. 每章最低验收标准（Definition of Done）
-
-章节标记为「已完成」前，建议满足：
-
-- 中英文 README 均已创建且结构一致  
-- 包含**可复制的命令**与**预期输出**（或截图）  
-- 标明适用版本（如 RHEL 9.x、AAP 2.6）  
-- 提供至少 1 条「常见失败 + 处理」  
-- 英文技术文件路径在 `assets/` 或仓库中有明确引用  
-- 已推送到 GitHub 或 PR 已开（MCP 同步）
-
----
-
-## 7. GitHub 同步工作流（建议）
-
-1. 在 `90_AIOps_DEMO_StepbyStep_Guide/` 按 §4.2 创建子目录并撰写 `*-CN.md`。
-2. 复制/润色为 `*-EN.md`（技术步骤可英文化，IP/主机名保持一致）。
-3. 使用 Cursor **GitHub MCP**：commit → push 到 `AIOps_Enterprise_Practices`。
-4. 在 GitHub 上检查 Markdown 渲染与 `images/` 是否正常显示。
-5. 更新系列入口 `README-CN.md` / `README-EN.md` 的目录链接。
-
----
-
-## 8. 后续行动（Next Actions）
-
-
-| 优先级 | 动作                                                                | 负责人 |
-| --- | ----------------------------------------------------------------- | --- |
-| P0  | 撰写 `00-Guide-How-To-Use-CN.md` + 系列 `README-CN.md`                | —   |
-| P0  | 完成 `03-01` / `03-02` 架构章，固定全环境 IP/端口表                             | —   |
-| P1  | 按 §3.5 顺序实施 **第 4–5 章**（AAP + Prometheus），复用现有 `04_prometheus` 文档 | —   |
-| P1  | 完成 **第 6–7 章** Chaos + EDA，与 rulebook 文件名对齐                       | —   |
-| P2  | 第 8–11 章联调文档 + 端到端验证清单                                            | —   |
-| P2  | Part I 五篇精简版 + 链接到 Slides                                         | —   |
-
-
----
-
-## 9. 修订记录
-
-
-| 版本   | 日期         | 说明                                                           |
-| ---- | ---------- | ------------------------------------------------------------ |
-| v1.0 | —          | 初稿：主题、背景、目录列表                                                |
-| v1.1 | 2026-06-02 | 结构化：命名规范、仓库映射、章节表、DoD、依赖顺序；修正 Biz Valu / 6.3 笔误；对齐现有 DEMO 目录 |
-
-
----
 
 ## 附录 A：原目录清单对照（快速索引）
 
