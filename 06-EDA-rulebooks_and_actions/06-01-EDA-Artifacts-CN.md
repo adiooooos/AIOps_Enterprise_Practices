@@ -1,4 +1,4 @@
-# EDA Rulebook 与 Action 制品（Use Case 1/2/3）
+# EDA Rulebook 与 Action Artifacts（Use Case 1/2/3）
 
 > **状态**：20260609 Updated  
 > **系列**：AIOps DEMO Center 部署与配置分步指南  
