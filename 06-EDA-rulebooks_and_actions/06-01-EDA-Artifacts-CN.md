@@ -193,11 +193,13 @@ Use Case 2：Network Error 故障仿真 的rulebook如下：
 
 ### 2.1 Use Case 1 Rulebook Activation
 
-<图片放在这里>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/567dc4db-0edf-4d98-9154-a0eca1113c3e" />
+
 
 ### 2.2 Use Case 2 Rulebook Activation
 
-<图片放在这里>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/bfcec8f0-6917-4291-ab81-7fefb63c3702" />
+
 
 
 
@@ -1380,13 +1382,15 @@ Use Case 2：Network Error 故障仿真 的rulebook如下：
 
 ### 4.1 Use Case 1 对应 Action JT
 
-<图片放在这里>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/f00f33ef-6095-471d-a5a7-d5c5baaf401c" />
+
 
 尤其注意：Extra variables 里配置为：`webhook_payload: '{{ event.payload }}'`
 
 ### 4.2 Use Case 2 对应 Action JT
 
-<图片放在这里>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/0e24b54f-6ddd-4906-98c2-3ea23ab912c6" />
+
 
 尤其注意：Extra variables 里配置为：`webhook_payload: '{{ event.payload }}'`
 
