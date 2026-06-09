@@ -1,7 +1,7 @@
 # AIOps DEMO Center — Deploy & Setup Step-by-Step Guide
 
 > **Series**: AIOps DEMO Center Deploy & Setup Step-by-Step Guide  
-> **中文文档**: [README-CN.md](README-CN.md)  
+> **Chinee verion**: [README-CN.md](README-CN.md)  
 > **Status**: 202606 Updated  
 
 Reproduce the **GCG AIOps DEMO Center** end to end: observability, event-driven automation (EDA), workflow orchestration (n8n), ChatOps (Mattermost), and AI Agent integration (MCP for AAP / SSH).
