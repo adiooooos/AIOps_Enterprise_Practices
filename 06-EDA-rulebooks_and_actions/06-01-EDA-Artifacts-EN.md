@@ -166,11 +166,13 @@ Rulebook for Use Case 2 (Network Error fault simulation):
 
 ### 2.1 Use Case 1 Rulebook Activation
 
-<put image here>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/28116d3a-8bdc-4e8d-a573-91dd6608eb1c" />
+
 
 ### 2.2 Use Case 2 Rulebook Activation
 
-<put image here>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/53b87a75-0308-4ec3-a4d1-4ea7e30e5a2a" />
+
 
 
 
@@ -1308,13 +1310,15 @@ Rulebook for Use Case 2 (Network Error fault simulation):
 
 ### 4.1 Use Case 1 Action JT
 
-<put image here>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/1687ed78-a433-43d5-97f3-ee25ab0aed74" />
+
 
 Important: set Extra variables to: `webhook_payload: '{{ event.payload }}'`
 
 ### 4.2 Use Case 2 Action JT
 
-<put image here>
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/60d23e40-68e6-48da-817e-dc2b695017e6" />
+
 
 Important: set Extra variables to: `webhook_payload: '{{ event.payload }}'`
 
