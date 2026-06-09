@@ -1,0 +1,453 @@
+{
+  "name": "02_EDA_Trigger_Workflow_B_0519",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=http://10.210.65.14:8065/api/v4/posts/{{ $json.body.post_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        112
+      ],
+      "id": "3a927707-0544-4045-8cb0-5ea859a0eede",
+      "name": "Get Reply Details"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f5feb353-af63-4ae1-a2cb-bde6e9f360e7",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        112
+      ],
+      "id": "1e30b784-f430-4585-9ce2-e0dbc0b95757",
+      "name": "Mattermost Trigger",
+      "webhookId": "f5feb353-af63-4ae1-a2cb-bde6e9f360e7"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1873af4e-05ae-4552-8755-7613230deaf6",
+              "leftValue": "={{ $json.root_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b3607d43-a4f3-4ecb-8ef6-f04225ab8c89",
+      "name": "Is a Reply?"
+    },
+    {
+      "parameters": {
+        "url": "=http://10.210.65.14:8065/api/v4/posts/{{ $json.root_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        208
+      ],
+      "id": "2cc1a9a4-dea8-47db-acdd-7c88dd2d8947",
+      "name": "Get Root Post"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从上一步 \"Get Root Post\" 节点的输出中，获取消息内容\nconst rootMessage = $json.message; // 这是原始告警消息全文\n\n// 1. 使用最终修正的正则表达式\nconst match = rootMessage.match(/\\*\\*Incident ID:\\*\\*\\s+\\\\`(.*?)`/);\n\nif (!match || !match[1]) {\n  throw new Error(\"在原始消息中找不到 Incident ID\");\n}\nconst incidentSessionId = match[1];\n\n// 2. 从 \"Mattermost Trigger\" 节点获取用户本次回复的具体内容\nconst userMessage = $('Mattermost Trigger').item.json.body.text.replace('!ai', '').trim();\n\n// 3. 从 \"Get Reply Details\" 节点获取回复所需的频道和帖子ID\nconst channelId = $('Get Reply Details').item.json.channel_id;\nconst rootId = $('Get Reply Details').item.json.root_id;\n\n// 4. 将所有关键信息打包输出\nreturn [{\n  json: {\n    incidentSessionId: incidentSessionId,\n    currentUserMessage: userMessage, \n    channelId: channelId,\n    rootId: rootId,\n    originalContext: rootMessage // 将原始告警消息也输出 \n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        448
+      ],
+      "id": "0342ec33-13ca-4a1e-a710-9dc682bbacb7",
+      "name": "Consolidate Context"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.finalPromptForAgent }}",
+        "hasOutputParser": true,
+        "options": {
+          "maxIterations": 30
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -48,
+        432
+      ],
+      "id": "c4e4cd5c-fa63-4c78-9aff-0c736cf3f383",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "=deepseek-chat",
+        "options": {
+          "maxTokens": -1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        592
+      ],
+      "id": "659a7ba9-e978-4bf3-8d00-42a90ee32ae8",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "Oe7T3ra6QfUa8NPu",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.210.65.14:8065/api/v4/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel_id",
+              "value": "={{ $('Consolidate Context').item.json.channelId }}"
+            },
+            {
+              "name": "root_id",
+              "value": "={{ $('Consolidate Context').item.json.rootId }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        432
+      ],
+      "id": "183b1302-1c08-4fe9-8b05-8294b7525507",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.210.65.14:8065/api/v4/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel_id",
+              "value": "={{ $('Mattermost Trigger').item.json.body.channel_id }}"
+            },
+            {
+              "name": "root_id",
+              "value": "={{ $('Mattermost Trigger').item.json.body.post_id }}"
+            },
+            {
+              "name": "message",
+              "value": "=您好！我是 AIOps 智能助手。🤖  我注意到您在一个新的帖子中召唤了我。我的主要功能是在一个已有的告警帖子下进行交互式诊断。  **请按以下方式与我互动：** 1.  找到一个由我发布的 **AIOps 告警分析报告**。 2.  点击那条消息下方的 **\"Reply\" (回复)** 按钮。 3.  在回复中，以 `!ai` 开头，输入您的指令。  例如：`!ai 请帮我检查磁盘空间`  这样我就能获取到告警的上下文，为您提供更精准的帮助。"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        176
+      ],
+      "id": "840c494d-6b15-4b96-8cea-d0207547b3b2",
+      "name": "Post Help Message"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Consolidate Context').item.json.incidentSessionId.replace(/\\\\$/, '') }}",
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -64,
+        624
+      ],
+      "id": "b30db36c-778e-4cc1-bd5f-3974c9867df7",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "446726c2-9af4-436c-9867-6ab5434a1274",
+              "name": "finalPromptForAgent",
+              "value": "=System: 你是一名RHEL系统故障诊断助手。请基于输入的日志、性能数据或报错信息，结合RHEL常见问题（如CPU、内存、磁盘、网络、服务异常），提供简洁、专业、基于事实的初步诊断和可能的排查方向。不要编造不存在的信息，如无明确依据，请说明“不确定”或建议收集更多数据。\n当需要使用mcp工具时候，你可以使用mcp for aap,以及mcp for ssh工具。\n用户请求你使用mcp工具时候，你必须能调用正确的mcp工具。\n\n此外，MCP for SSH工具的特别使用规则如下：\n# Connection rules\nThe MCP server holds a managed SSH identity. Every connect() call MUST use exactly these three arguments:\n  connect(\n    host=\"<target-IP>\",\n    username=\"root\",\n    alias=\"<short-name>\"\n  )\nNever pass password, private_key_path, or any other auth argument. Never ask the user for credentials.\n\n\n# Workflow\n1. Call connect() first with the 3 required args.\n2. Then use run(command, target=<alias>), usage(target=<alias>), ps(target=<alias>), etc.\n3. Read-only commands only: top -bn1, free -h, df -h, iostat, journalctl, systemctl status, ps.\n4. NEVER execute: rm, reboot, shutdown, mkfs, dd.\n5. End with a structured summary: Findings → Probable cause → Recommended action.\n\n\nBased on the following original alert context and your latest request, please respond or take action.\n\n--- Original Alert Context ---\n{{ $('Consolidate Context').item.json.originalContext }}\n--- End of Original Alert Context ---\n\n--- User's Request ---\n{{ $('Consolidate Context').item.json.currentUserMessage }}\n--- End of User's Request ---\n\nPlease analyze the user's request in light of the original alert and proceed accordingly. If the user asks to summarize or create a report based on previous messages, use the Original Alert Context provided above.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -448,
+        448
+      ],
+      "id": "7febdc91-0e35-44f8-aafe-d4c093afacd8",
+      "name": "Build Agent Prompt"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://10.210.65.24:3000/mcp/job_management",
+        "serverTransport": "httpStreamable",
+        "authentication": "bearerAuth",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        112,
+        624
+      ],
+      "id": "821f28f7-b8f9-4a8d-809c-3b053c30bf5f",
+      "name": "mcp for aap2.6",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "ps2XYrWdLm0K1cor",
+          "name": "Bearer Auth For AAP MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://10.210.65.14:3000/mcp",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        624
+      ],
+      "id": "3eee8edb-6ff9-4b60-8626-fb338a689ac9",
+      "name": "MCPfor SSH"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Reply Details": {
+      "main": [
+        [
+          {
+            "node": "Is a Reply?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mattermost Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Reply Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is a Reply?": {
+      "main": [
+        [
+          {
+            "node": "Get Root Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Help Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Root Post": {
+      "main": [
+        [
+          {
+            "node": "Consolidate Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate Context": {
+      "main": [
+        [
+          {
+            "node": "Build Agent Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Agent Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mcp for aap2.6": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCPfor SSH": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fb0da9dc-4c78-46ba-820e-fe1123277bce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e451800a1ad80238001b362c2ebb4fea67e00aca5a0e36228f6f47fc49989ae"
+  },
+  "id": "wDkzWamFD6WgmWsA",
+  "tags": []
+}

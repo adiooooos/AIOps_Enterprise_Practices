@@ -1,0 +1,619 @@
+{
+  "name": "01_Chat_Triger_A_0519",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=$json.incidentSessionId",
+        "contextWindowLength": 30
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        992,
+        816
+      ],
+      "id": "9736b796-ec39-40fe-b99a-e46958637610",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "url": "=http://10.210.65.14:8065/api/v4/posts/{{ $json.body.post_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        608,
+        144
+      ],
+      "id": "51a1158f-208f-4055-9dc1-5b05392f0c75",
+      "name": "Get Post Details"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://10.210.65.14:8065/api/v4/posts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "channel_id",
+              "value": "={{ $('Consolidate New Context').item.json.channelId }}"
+            },
+            {
+              "name": "root_id",
+              "value": "={{ $('Consolidate New Context').item.json.rootId }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1568,
+        672
+      ],
+      "id": "35877e5d-4248-4899-b556-1922211bd5b6",
+      "name": "Reply to New Post"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bf225369-01df-4b59-86fc-502482d1aab8",
+              "leftValue": "={{ $json.fileIds.length  }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        144
+      ],
+      "id": "c4e1e2b3-3e84-4542-bbe1-da6a3cc8f5b9",
+      "name": "If Files Exist?"
+    },
+    {
+      "parameters": {
+        "url": "=http://10.210.65.14:8065/api/v4/files/{{ $json.fileIds }}/info",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        512,
+        384
+      ],
+      "id": "2a73c176-77d7-47ca-bced-c524c78b6c95",
+      "name": "Get File Info"
+    },
+    {
+      "parameters": {
+        "url": "=http://10.210.65.14:8065/api/v4/files/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer dykatazmn3g6zrs878id7f318c"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        384
+      ],
+      "id": "32082116-c0f4-40a8-a6d1-8303be9ca1eb",
+      "name": "Get File Content"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1232,
+        384
+      ],
+      "id": "cbf8a0b3-2ac2-413e-ab17-170540a9b062",
+      "name": "Merge Loop"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1760,
+        432
+      ],
+      "id": "27df37a6-d7b4-4b4f-8bc8-93ac2e8e46a8",
+      "name": "Merge Main"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        416
+      ],
+      "id": "e9af0202-8d09-4af2-aebb-2e5db84aa47d"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=fileIds",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        320,
+        384
+      ],
+      "id": "1dc28f78-f6da-476d-8645-f0235cc95534",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4b3628e2-367e-41ee-9cb2-a42a101d29cf",
+              "name": "fileName",
+              "value": "={{ $('Get File Info').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "b33880cc-9841-4d70-828a-cde9bba87085",
+              "name": "fileContent",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        384
+      ],
+      "id": "737e019c-5d64-4f71-baab-8b978fb21a2a",
+      "name": "Combine File Data"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.finalPromptForAgent }}",
+        "hasOutputParser": true,
+        "options": {
+          "maxIterations": 30
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        624
+      ],
+      "id": "a4aa3ce7-9852-4822-82ec-4290064fc6fa",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "446726c2-9af4-436c-9867-6ab5434a1274",
+              "name": "finalPromptForAgent",
+              "value": "=System: 你是一名RHEL系统故障诊断助手。请基于输入的日志、性能数据或报错信息，结合RHEL常见问题（如CPU、内存、磁盘、网络、服务异常），提供简洁、专业、基于事实的初步诊断和可能的排查方向。不要编造不存在的信息，如无明确依据，请说明“不确定”或建议收集更多数据。当需要对AAP server进行相应的动作的时候，可以使用MCP工具。\n\n\n\n--- Original Alert Context ---\n{{ $json.originalContext }}\n--- End of Original Alert Context ---\n\n--- User's Request ---\n{{ $json.currentUserMessage }}\n--- End of User's Request ---\n\n--- Attached File Contents ---\n{{ $json.fileContent }}  // <--- 在这里添加新字段\n--- End of Attached File Contents ---\n\nPlease analyze the user's request...",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": false,
+          "dotNotation": false
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        752
+      ],
+      "id": "069351b4-f0f9-4919-acc8-c839a144238a",
+      "name": "Build Agent Prompt1"
+    },
+    {
+      "parameters": {
+        "content": "### noise reduction",
+        "height": 480,
+        "width": 1840,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        112
+      ],
+      "typeVersion": 1,
+      "id": "bb9837da-7210-433b-98f7-8f45bbb2012a",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "### AI Analysis ",
+        "height": 384,
+        "width": 1840,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        608
+      ],
+      "typeVersion": 1,
+      "id": "c601288a-3b4b-4f64-9e96-d8a92c81d74a",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- 智能上下文处理器 (v4 - 修复了多文件字符串) ---\n\n// 1. 获取所有必需的上游节点数据\nconst triggerBody = $('Mattermost New Issue Trigger').item.json.body;\nconst postDetails = $('Get Post Details').item.json;\n\nlet sessionId;\nlet rootId;\nlet originalContext;\n\n// 2. 从触发器获取用户的当前指令\nconst userMessage = triggerBody.text.replace('!ai', '').trim();\nconst channelId = postDetails.channel_id;\n\n// 3. 核心逻辑：判断是新会话还是回复\nif (postDetails.root_id === \"\") {\n    sessionId = postDetails.id;\n    rootId = postDetails.id;\n    originalContext = \"这是一个全新的、由用户发起的AIOps诊断请求。\";\n} else {\n    sessionId = postDetails.root_id;\n    rootId = postDetails.root_id;\n    originalContext = \"\"; \n}\n\n// 4. (可选) 处理文件上传\n//\n// === *** 关键修复 (v4) *** ===\n//\nlet fileIdsInput = triggerBody.file_ids || []; // 可能是 [], \"id1\", 或 \"id1,id2\"\nlet finalFileIds = []; // 我们最终要保证这是一个数组\n\nif (Array.isArray(fileIdsInput)) {\n    // 情况 A: Mattermost 发送了一个数组 (e.g., [\"id1\", \"id2\"]) 或空数组 []\n    // 这是最理想的情况\n    finalFileIds = fileIdsInput;\n} else if (typeof fileIdsInput === 'string' && fileIdsInput.length > 0) {\n    // 情况 B: Mattermost 发送了一个字符串\n    \n    if (fileIdsInput.includes(',')) {\n        // 情况 B1: 字符串包含逗号, e.g., \"id1,id2\"\n        // 我们必须用 .split() 将它拆分为一个数组\n        finalFileIds = fileIdsInput.split(',');\n    } else {\n        // 情况 B2: 字符串不含逗号, e.g., \"id1\"\n        // 我们将它包装成一个数组\n        finalFileIds = [fileIdsInput];\n    }\n}\n// (如果 fileIdsInput 是 null 或其他, finalFileIds 会保持为 [], 这是安全的)\n// === *** 修复结束 *** ===\n//\n\n// 5. 将计算好的变量打包输出\nreturn [{\n  json: {\n    incidentSessionId: sessionId,\n    currentUserMessage: userMessage,\n    channelId: channelId,\n    rootId: rootId,\n    originalContext: originalContext,\n    fileIds: finalFileIds // <--- 现在这保证是一个 [\"id1\", \"id2\"] 格式的数组\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        144
+      ],
+      "id": "f139c6b8-4ed5-46e1-a429-83ea0c790404",
+      "name": "Consolidate New Context"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "747072f8-b6f2-40d6-ac51-2b8892255cbd",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        144
+      ],
+      "id": "10a20a03-f3ba-46df-acae-fe1d8ba3860c",
+      "name": "Mattermost New Issue Trigger",
+      "webhookId": "747072f8-b6f2-40d6-ac51-2b8892255cbd"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://10.210.65.24:3000/mcp/job_management",
+        "authentication": "bearerAuth",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        1184,
+        832
+      ],
+      "id": "cfe61877-fa94-49f2-b2bd-889be41ad9bc",
+      "name": "mcp for aap2.6",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "ps2XYrWdLm0K1cor",
+          "name": "Bearer Auth For AAP MCP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "=deepseek-chat",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        768,
+        816
+      ],
+      "id": "c9c57733-0bb0-43fa-9d73-8713ef0a4a76",
+      "name": "DeepSeek Chat Model1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "Oe7T3ra6QfUa8NPu",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://10.210.65.14:3000/mcp",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        1376,
+        832
+      ],
+      "id": "5b5ad7f0-a9e9-4ea2-8983-6ed49dbb1dee",
+      "name": "MCP_for_SSH"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Post Details": {
+      "main": [
+        [
+          {
+            "node": "Consolidate New Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Files Exist?": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Main",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get File Info": {
+      "main": [
+        [
+          {
+            "node": "Get File Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File Content": {
+      "main": [
+        [
+          {
+            "node": "Combine File Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Loop": {
+      "main": [
+        [
+          {
+            "node": "Merge Main",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Main": {
+      "main": [
+        [
+          {
+            "node": "Build Agent Prompt1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Get File Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine File Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Reply to New Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Agent Prompt1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate New Context": {
+      "main": [
+        [
+          {
+            "node": "If Files Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mattermost New Issue Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Post Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mcp for aap2.6": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP_for_SSH": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e9fc6419-06b9-47b6-808f-2bc98aaf640e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7e451800a1ad80238001b362c2ebb4fea67e00aca5a0e36228f6f47fc49989ae"
+  },
+  "id": "AolazgSW0IVwUkCq",
+  "tags": []
+}
