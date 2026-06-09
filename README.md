@@ -1,4 +1,4 @@
-# AIOps DEMO Center — Deploy & Setup Step-by-Step Guide
+# AIOps Practices Center — Deploy & Setup Step-by-Step Guide
 
 > **Series**: AIOps DEMO Center Deploy & Setup Step-by-Step Guide  
 > **Chinee verion**: [README-CN.md](README-CN.md)  
