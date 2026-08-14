@@ -1369,7 +1369,7 @@ groups:
         annotations:
           summary: "上下文切换率过高: {{ $labels.instance }}"
           description: "实例 {{ $labels.instance }} 的上下文切换率过高，当前值: {{ $value | humanize }} 次/秒。可能存在大量线程竞争。"
-```yaml
+```
 
 #### linux_network_alerts.yml
 ```yaml
@@ -1472,7 +1472,7 @@ groups:
         annotations:
           summary: "TCP 连接数接近上限: {{ $labels.instance }}"
           description: "实例 {{ $labels.instance }} 的 TCP 连接数占总 socket 使用数的 {{ $value | humanizePercentage }}，接近上限。"
-```yaml
+```
 
 #### linux_filesystem_alerts.yml
 ```yaml
@@ -1585,7 +1585,7 @@ ntage }}。请立即处理！"
           summary: "文件系统变为只读: {{ $labels.instance }}"
           description: "实例 {{ $labels.instance }} 的挂载点 {{ $labels.mountpoint }} (设备: {{ $labels.device }}) 已变为只读状态。可能存在磁盘故障或文件系统错误。"
 
-```yaml
+```
 
 #### linux_service_alerts.yml
 
@@ -1678,4 +1678,5 @@ groups:
           summary: "内核版本变更: {{ $labels.instance }}"
           description: "实例 {{ $labels.instance }} 的内核版本在最近 30 分钟内发生了变化。当前内核: {{ $labels.release }}。"
 
-```yaml
+```
+
