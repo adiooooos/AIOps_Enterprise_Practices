@@ -1048,3 +1048,460 @@ inhibit_rules:
 #           - start_time: '00:00'
 #             end_time: '06:00'
 ```
+### 0814 updated Prometheus rules
+
+#### linux_performance_alerts.yml
+```yaml
+# Linux 性能告警规则
+# 监控 CPU、内存、磁盘 I/O 等系统性能指标
+
+groups:
+  - name: linux.performance.alerts
+    interval: 30s
+    rules:
+      # 高系统 CPU 使用率 - Warning 级别
+      - alert: HighSystemCpuUsage
+        expr: |
+          (
+            sum without (cpu) (
+              irate(node_cpu_seconds_total{mode!="idle"}[5m])
+            )
+          ) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高系统 CPU 使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 CPU 使用率持续 5 分钟高于 80%，当前值: {{ $value | humanizePercentage }}。"
+
+      # 高系统 CPU 使用率 - Critical 级别
+      - alert: CriticalSystemCpuUsage
+        expr: |
+          (
+            sum without (cpu) (
+              irate(node_cpu_seconds_total{mode!="idle"}[1m])
+            )
+          ) > 0.95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "严重 CPU 使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 CPU 使用率持续 1 分钟高于 95%，当前值: {{ $value | humanizePercentage }}。系统可能无响应！"
+
+      # 高 CPU 负载 - Warning 级别
+      - alert: HighCpuLoad
+        expr: |
+          (
+            node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 1.5
+          )
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高 CPU 负载: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 5 分钟平均负载超过 CPU 核心数的 1.5 倍，当前值: {{ $value | humanize }}。"
+
+      # 高 CPU 负载 - Critical 级别
+      - alert: CriticalCpuLoad
+        expr: |
+          (
+            node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 2.0
+          )
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "严重 CPU 负载: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 5 分钟平均负载超过 CPU 核心数的 2 倍，当前值: {{ $value | humanize }}。"
+
+      # 高内存使用率 - Warning 级别
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+          ) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高内存使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的内存使用率持续 5 分钟高于 80%，当前值: {{ $value | humanizePercentage }}。"
+
+      # 高内存使用率 - Critical 级别
+      - alert: CriticalMemoryUsage
+        expr: |
+          (
+            1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "严重内存使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的内存使用率持续 2 分钟高于 95%，当前值: {{ $value | humanizePercentage }}。系统可能出现 OOM！"
+
+      # Swap 使用率过高
+      - alert: HighSwapUsage
+        expr: |
+          (
+            (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / node_memory_SwapTotal_bytes
+          ) > 0.50
+          and
+          node_memory_SwapTotal_bytes > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Swap 使用率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 Swap 使用率持续 5 分钟高于 50%，当前值: {{ $value | humanizePercentage }}。可能存在内存不足问题。"
+
+      # 磁盘 I/O 延迟过高
+      - alert: HighDiskIOLatency
+        expr: |
+          (
+            rate(node_disk_io_time_seconds_total{device!~"dm-.*"}[5m]) > 0.8
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘 I/O 延迟过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的磁盘 {{ $labels.device }} I/O 延迟过高，当前 I/O 利用率: {{ $value | humanizePercentage }}。"
+
+      # 磁盘读写速率异常高
+      - alert: HighDiskIOPS
+        expr: |
+          (
+            rate(node_disk_reads_completed_total{device!~"dm-.*"}[5m]) +
+            rate(node_disk_writes_completed_total{device!~"dm-.*"}[5m])
+          ) > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘 IOPS 异常高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的磁盘 {{ $labels.device }} IOPS 异常高，当前值: {{ $value | humanize }} ops/s。"
+
+      # 上下文切换率过高
+      - alert: HighContextSwitching
+        expr: |
+          (
+            rate(node_context_switches_total[5m]) > 100000
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "上下文切换率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的上下文切换率过高，当前值: {{ $value | humanize }} 次/秒。可能存在大量线程竞争。"
+```
+
+#### linux_network_alerts.yml
+```yaml
+# Linux 网络告警规则
+# 监控网络错误、丢包和连接状态
+
+groups:
+  - name: linux.network.alerts
+    interval: 30s
+    rules:
+      # 网络接收丢包率过高
+      - alert: HighNetworkReceiveDrop
+        expr: |
+          (
+            rate(node_network_receive_drop_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]) > 10
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "网络接收丢包率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的网卡 {{ $labels.device }} 接收丢包率过高，当前速率: {{ $value | humanize }} 包/秒。"
+
+      # 网络发送丢包率过高
+      - alert: HighNetworkTransmitDrop
+        expr: |
+          (
+            rate(node_network_transmit_drop_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]) > 10
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "网络发送丢包率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的网卡 {{ $labels.device }} 发送丢包率过高，当前速率: {{ $value | humanize }} 包/秒。"
+
+      # 网络接收错误率过高
+      - alert: HighNetworkReceiveErrors
+        expr: |
+          (
+            rate(node_network_receive_errs_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]) > 10
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "网络接收错误率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的网卡 {{ $labels.device }} 接收错误率过高，当前速率: {{ $value | humanize }} 包/秒。"
+
+      # 网络发送错误率过高
+      - alert: HighNetworkTransmitErrors
+        expr: |
+          (
+            rate(node_network_transmit_errs_total{device!~"lo|veth.*|docker.*|br-.*"}[5m]) > 10
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "网络发送错误率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的网卡 {{ $labels.device }} 发送错误率过高，当前速率: {{ $value | humanize }} 包/秒。"
+
+      # 网络接口状态异常
+      - alert: NetworkInterfaceDown
+        expr: |
+          (
+            node_network_up{device!~"lo|veth.*|docker.*|br-.*"} == 0
+          )
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "网络接口异常: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的网卡 {{ $labels.device }} 处于 DOWN 状态。"
+
+      # TCP 连接处于 TIME_WAIT 状态过多
+      - alert: HighTCPTimeWaitConnections
+        expr: |
+          (
+            node_netstat_Tcp_CurrEstab > 0
+            and
+            node_sockstat_TCP_tw / node_netstat_Tcp_CurrEstab > 2
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TCP TIME_WAIT 连接过多: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 TCP TIME_WAIT 连接数是当前建立连接数的 {{ $value | humanize }} 倍。可能存在连接泄漏或短连接过多的情况。"
+
+      # TCP 连接数接近上限
+      - alert: TCPConnectionsNearLimit
+        expr: |
+          (
+            node_netstat_Tcp_CurrEstab / node_sockstat_sockets_used > 0.8
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TCP 连接数接近上限: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 TCP 连接数占总 socket 使用数的 {{ $value | humanizePercentage }}，接近上限。"
+```
+
+#### linux_filesystem_alerts.yml
+```yaml
+# Linux 文件系统告警规则
+# 监控磁盘空间使用和 inode 使用情况
+
+groups:
+  - name: linux.filesystem.alerts
+    interval: 30s
+    rules:
+      # 文件系统空间不足告警 - Warning 级别
+      - alert: FilesystemSpaceFillingUp
+        expr: |
+          (
+            node_filesystem_avail_bytes{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+            /
+            node_filesystem_size_bytes{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+          ) * 100 < 20
+          and
+          node_filesystem_readonly{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "文件系统空间不足: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的挂载点 {{ $labels.mountpoint }} (设备: {{ $labels.device }}) 剩余空间不足 20%，当前可用: {{ $value | humanizePercent
+age }}。"
+
+      # 文件系统空间严重不足告警 - Critical 级别
+      - alert: FilesystemSpaceCritical
+        expr: |
+          (
+            node_filesystem_avail_bytes{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+            /
+            node_filesystem_size_bytes{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+          ) * 100 < 10
+          and
+          node_filesystem_readonly{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "文件系统空间严重不足: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的挂载点 {{ $labels.mountpoint }} (设备: {{ $labels.device }}) 剩余空间不足 10%，当前可用: {{ $value | humanizePercent
+age }}。请立即处理！"
+
+      # 文件系统预测将在 24 小时内耗尽
+      - alert: FilesystemWillFillIn24h
+        expr: |
+          (
+            predict_linear(node_filesystem_avail_bytes{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}[6h], 24 * 3600) < 0
+            and
+            node_filesystem_avail_bytes{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} < 0.4
+0
+          )
+          and
+          node_filesystem_readonly{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} == 0
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "文件系统空间预测告警: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的挂载点 {{ $labels.mountpoint }} (设备: {{ $labels.device }}) 基于过去 6 小时的趋势，预计在 24 小时内空间将耗尽。当前
+可用: {{ $value | humanize }}B。"
+
+      # Inode 使用率过高 - Warning 级别
+      - alert: FilesystemInodesFillingUp
+        expr: |
+          (
+            node_filesystem_files_free{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+            /
+            node_filesystem_files{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+          ) * 100 < 20
+          and
+          node_filesystem_readonly{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "文件系统 Inode 不足: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的挂载点 {{ $labels.mountpoint }} (设备: {{ $labels.device }}) 剩余 inode 不足 20%，当前可用: {{ $value | humanizePerc
+entage }}。"
+
+      # Inode 使用率严重过高 - Critical 级别
+      - alert: FilesystemInodesCritical
+        expr: |
+          (
+            node_filesystem_files_free{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+            /
+            node_filesystem_files{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"}
+          ) * 100 < 5
+          and
+          node_filesystem_readonly{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "文件系统 Inode 严重不足: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的挂载点 {{ $labels.mountpoint }} (设备: {{ $labels.device }}) 剩余 inode 不足 5%，当前可用: {{ $value | humanizePerce
+ntage }}。请立即处理！"
+
+      # 文件系统只读
+      - alert: FilesystemReadOnly
+        expr: |
+          node_filesystem_readonly{fstype!~"tmpfs|devtmpfs|vfat|overlay|squashfs"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "文件系统变为只读: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的挂载点 {{ $labels.mountpoint }} (设备: {{ $labels.device }}) 已变为只读状态。可能存在磁盘故障或文件系统错误。"
+
+```
+
+#### linux_service_alerts.yml
+
+```yaml
+# Linux 服务和实例状态告警规则
+# 监控关键系统服务和实例可用性
+
+groups:
+  - name: linux.service.alerts
+    interval: 30s
+    rules:
+      # 实例宕机告警 - 最高优先级
+      - alert: InstanceDown
+        expr: |
+          up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "实例宕机: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} (job: {{ $labels.job }}) 已宕机超过 1 分钟，Prometheus 无法抓取其指标。"
+
+      # Node Exporter 不可用
+      - alert: NodeExporterDown
+        expr: |
+          up{job=~"node_exporter.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Node Exporter 不可用: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 Node Exporter 不可用，无法收集系统指标。"
+
+      # 系统服务状态异常
+      - alert: SystemdServiceFailed
+        expr: |
+          node_systemd_unit_state{state="failed"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Systemd 服务失败: {{ $labels.name }}"
+          description: "实例 {{ $labels.instance }} 上的服务 {{ $labels.name }} 处于 failed 状态。"
+
+      # 关键系统服务未运行
+      - alert: CriticalSystemdServiceInactive
+        expr: |
+          node_systemd_unit_state{
+            state="active",
+            name=~"sshd.service|NetworkManager.service|chronyd.service|rsyslog.service"
+          } == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "关键服务未运行: {{ $labels.name }}"
+          description: "实例 {{ $labels.instance }} 上的关键服务 {{ $labels.name }} 未处于 active 状态。"
+
+
+      # 系统时钟偏移过大
+      - alert: SystemClockSkewDetected
+        expr: |
+          abs(node_timex_offset_seconds) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "系统时钟偏移: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的系统时钟偏移超过 50ms，当前偏移: {{ $value | humanize }}s。"
+
+      # 系统重启
+      - alert: SystemRebooted
+        expr: |
+          node_boot_time_seconds > (time() - 600)
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "系统已重启: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 在最近 10 分钟内重启过。启动时间: {{ $value | humanizeTimestamp }}。"
+
+      # 内核版本变更
+      - alert: KernelVersionChanged
+        expr: |
+          changes(node_uname_info[30m]) > 0
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "内核版本变更: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的内核版本在最近 30 分钟内发生了变化。当前内核: {{ $labels.release }}。"
+
+```
