@@ -1221,3 +1221,152 @@ inhibit_rules:
 #           - start_time: '00:00'
 #             end_time: '06:00'
 ```
+
+### 0814 updated Prometheus rules
+
+#### linux_performance_alerts.yml
+```yaml
+# Linux 性能告警规则
+# 监控 CPU、内存、磁盘 I/O 等系统性能指标
+
+groups:
+  - name: linux.performance.alerts
+    interval: 30s
+    rules:
+      # 高系统 CPU 使用率 - Warning 级别
+      - alert: HighSystemCpuUsage
+        expr: |
+          (
+            sum without (cpu) (
+              irate(node_cpu_seconds_total{mode!="idle"}[5m])
+            )
+          ) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高系统 CPU 使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 CPU 使用率持续 5 分钟高于 80%，当前值: {{ $value | humanizePercentage }}。"
+
+      # 高系统 CPU 使用率 - Critical 级别
+      - alert: CriticalSystemCpuUsage
+        expr: |
+          (
+            sum without (cpu) (
+              irate(node_cpu_seconds_total{mode!="idle"}[1m])
+            )
+          ) > 0.95
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "严重 CPU 使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 CPU 使用率持续 1 分钟高于 95%，当前值: {{ $value | humanizePercentage }}。系统可能无响应！"
+
+      # 高 CPU 负载 - Warning 级别
+      - alert: HighCpuLoad
+        expr: |
+          (
+            node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 1.5
+          )
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高 CPU 负载: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 5 分钟平均负载超过 CPU 核心数的 1.5 倍，当前值: {{ $value | humanize }}。"
+
+      # 高 CPU 负载 - Critical 级别
+      - alert: CriticalCpuLoad
+        expr: |
+          (
+            node_load5 / count without (cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 2.0
+          )
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "严重 CPU 负载: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 5 分钟平均负载超过 CPU 核心数的 2 倍，当前值: {{ $value | humanize }}。"
+
+      # 高内存使用率 - Warning 级别
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+          ) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高内存使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的内存使用率持续 5 分钟高于 80%，当前值: {{ $value | humanizePercentage }}。"
+
+      # 高内存使用率 - Critical 级别
+      - alert: CriticalMemoryUsage
+        expr: |
+          (
+            1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
+          ) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "严重内存使用率: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的内存使用率持续 2 分钟高于 95%，当前值: {{ $value | humanizePercentage }}。系统可能出现 OOM！"
+
+      # Swap 使用率过高
+      - alert: HighSwapUsage
+        expr: |
+          (
+            (node_memory_SwapTotal_bytes - node_memory_SwapFree_bytes) / node_memory_SwapTotal_bytes
+          ) > 0.50
+          and
+          node_memory_SwapTotal_bytes > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Swap 使用率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的 Swap 使用率持续 5 分钟高于 50%，当前值: {{ $value | humanizePercentage }}。可能存在内存不足问题。"
+
+      # 磁盘 I/O 延迟过高
+      - alert: HighDiskIOLatency
+        expr: |
+          (
+            rate(node_disk_io_time_seconds_total{device!~"dm-.*"}[5m]) > 0.8
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘 I/O 延迟过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的磁盘 {{ $labels.device }} I/O 延迟过高，当前 I/O 利用率: {{ $value | humanizePercentage }}。"
+
+      # 磁盘读写速率异常高
+      - alert: HighDiskIOPS
+        expr: |
+          (
+            rate(node_disk_reads_completed_total{device!~"dm-.*"}[5m]) +
+            rate(node_disk_writes_completed_total{device!~"dm-.*"}[5m])
+          ) > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "磁盘 IOPS 异常高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的磁盘 {{ $labels.device }} IOPS 异常高，当前值: {{ $value | humanize }} ops/s。"
+
+      # 上下文切换率过高
+      - alert: HighContextSwitching
+        expr: |
+          (
+            rate(node_context_switches_total[5m]) > 100000
+          )
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "上下文切换率过高: {{ $labels.instance }}"
+          description: "实例 {{ $labels.instance }} 的上下文切换率过高，当前值: {{ $value | humanize }} 次/秒。可能存在大量线程竞争。"
+
