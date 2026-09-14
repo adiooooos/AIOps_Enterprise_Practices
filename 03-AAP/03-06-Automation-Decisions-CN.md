@@ -330,7 +330,33 @@ Git 提交后，在 UI 中配置相应 **Rulebook Activations**，用于 Event S
 配置 **Automation Decisions** 用于 Git 认证的 Credentials。
 <img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/8d41bfc4-4142-42e2-a65b-976a05d6a6c2" />
 
+路径：**Automation Decisions → Infrastructure → Credentials → Create / Edit**
 
+| 字段 | 填写值 | 说明 |
+| --- | --- | --- |
+| **Name** | `git` | 任意可识别名称；后续 EDA Project 会引用此凭据 |
+| **Organization** | `Default` | 与 EDA Project 同一 Organization |
+| **Credential type** | `Source Control` | Git SCM 专用类型 |
+| **Username** | **`git`** | SSH URL 中的登录用户（`git@host:...`），**不是** `root` |
+| **Password** | *留空* | 本 DEMO 使用 SSH 密钥认证，无需密码 |
+| **SCM Private Key** | `/root/.ssh/id_rsa` 全文 | 与第 1 章手工 `git push` 使用的是**同一把私钥**；公钥已写入 `git` 用户的 `authorized_keys` |
+
+获取私钥内容（在 AAP 节点 root shell 执行）：
+
+```bash
+cat /root/.ssh/id_rsa
+```
+
+将输出整段粘贴到 **SCM Private Key**（含 `-----BEGIN ... PRIVATE KEY-----` 与 `-----END ... PRIVATE KEY-----`），或 **Browse...** 上传该文件。若界面显示 `$encrypted$`，表示已保存过密钥；需更换时先 **Clear** 再重新粘贴。
+
+确认公钥与私钥配对（可选）：
+
+```bash
+grep -q "$(ssh-keygen -y -f /root/.ssh/id_rsa)" /var/lib/git/.ssh/authorized_keys \
+  && echo "key pair OK"
+```
+
+> **要点**：命令行里用 `root` 执行 `git push`，是因为 root 持有私钥；AAP/EDA 通过 Credential 里的 **`git` 用户名 + 同一把私钥** 以 `git@` 身份访问裸库，与第 1.4 节 `ssh git@host` 自测逻辑一致。
 
 
 ### 4.2 EDA Project
@@ -338,6 +364,68 @@ Git 提交后，在 UI 中配置相应 **Rulebook Activations**，用于 Event S
 配置 **Automation Decisions** 的 EDA Project（SCM URL、Branch `main`、子目录 `rulebooks/` 等）。
 
 <img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/018493e6-2941-424e-affc-0ca8c98ae5d6" />
+
+路径：**Automation Decisions → Projects → Create / Edit**
+
+#### Source control URL 填什么
+
+本 DEMO 使用 **SSH 协议** 指向本机裸库（与第 1.5 节 `git clone` 地址相同）：
+
+```text
+git@${AAP_SSH_HOST}:/var/lib/git/eda-project.git
+```
+
+| 环境 | 示例（将 `${AAP_SSH_HOST}` 换成你的 AAP 节点 IP 或 FQDN） |
+| --- | --- |
+| 文档示例 | `git@10.210.65.24:/var/lib/git/eda-project.git` |
+| AAP 2.7 lab | `git@10.210.65.46:/var/lib/git/eda-project.git` |
+
+**不要**写成 HTTP(S)（如 `https://...`），除非另行部署了 Git HTTP 前端；本指南裸库仅开放 SSH。
+
+#### 如何测试 URL 是否正确
+
+在 AAP 节点 root shell 执行（`AAP_SSH_HOST` 与 UI 中 URL 的 host 部分必须一致）：
+
+```bash
+export AAP_SSH_HOST="10.210.65.46"   # 改成你的 IP
+
+# 1) SSH 连通性（对应 4.1 凭据：git 用户 + id_rsa）
+ssh-keyscan -H "${AAP_SSH_HOST}" >> /root/.ssh/known_hosts 2>/dev/null
+ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes "git@${AAP_SSH_HOST}" exit
+
+# 2) 远端能否读到 main 分支（等同 EDA Sync 前的 SCM 探测）
+GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
+  git ls-remote "git@${AAP_SSH_HOST}:/var/lib/git/eda-project.git" refs/heads/main
+
+# 3) 完整 clone 自测（可选）
+rm -rf /tmp/eda-project-sync-test
+GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
+  git clone "git@${AAP_SSH_HOST}:/var/lib/git/eda-project.git" /tmp/eda-project-sync-test
+ls /tmp/eda-project-sync-test/rulebooks/
+```
+
+| 命令 | 通过标准 |
+| --- | --- |
+| `ssh git@host exit` | 退出码 0（或 Git shell 拒绝交互 shell 但公钥认证成功） |
+| `git ls-remote ... refs/heads/main` | 输出一行 commit hash + `refs/heads/main` |
+| `ls .../rulebooks/` | 可见 `README.txt` 或已提交的 `*.yml` |
+
+以上 CLI 测试通过后，UI 里 **Source control URL** 填同一 SSH 地址即可。
+
+#### EDA Project 字段一览
+
+| 字段 | 填写值 |
+| --- | --- |
+| **Name** | `eda-project`（或自定义） |
+| **Organization** | `Default` |
+| **Source control URL** | `git@${AAP_SSH_HOST}:/var/lib/git/eda-project.git` |
+| **Source control credential** | 第 4.1 节创建的 `git` 凭据 |
+| **Source control branch** | `main` |
+| **Source control ref** | *留空*（使用 branch 即可） |
+| **Rulebook directory** / **SCM sub-directory** | `rulebooks/` |
+
+保存后点击 **Sync**（或 **Sync project**）。Sync 成功且 Project 详情中可见 rulebook 列表，即表示 URL、凭据、分支与子目录均正确。
+
 
 
 
