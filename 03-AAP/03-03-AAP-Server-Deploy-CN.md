@@ -192,6 +192,8 @@ curl -k -I https://aap26.example.com
 
 ## 附录：`inventory-growth` 完整文件
 
+### AAP 2.6
+
 以下为 AIOps DEMO 配置完成后的 **`inventory-growth` 全文**（`ansible-automation-platform-containerized-setup-bundle-2.6-7-x86_64` 目录下）：
 
 ```ini
@@ -316,5 +318,163 @@ mcp_ignore_certificate_errors=true
 #mcp_tls_cert= <path to tls certificate>
 #mcp_tls_key= <path to tls key>
 ```
+
+### AAP 2.7
+
+以下为 AAP 2.7 lab（`aap27.example.com`）配置完成后的 **`inventory-growth` 全文**（`ansible-automation-platform-containerized-setup-bundle-2.7-2-x86_64` 目录下）：
+
+```ini
+# This is the AAP installer inventory file intended for the Container growth deployment topology.
+# This inventory file expects to be run from the host where AAP will be installed.
+# Please consult the Ansible Automation Platform product documentation about this topology's tested hardware configuration.
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/tested_deployment_models/container-topologies
+#
+# Please consult the docs if you're unsure what to add
+# For all optional variables please consult the included README.md
+# or the Ansible Automation Platform documentation:
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/containerized_installation
+
+# This section is for your AAP Gateway host(s)
+# -----------------------------------------------------
+[automationgateway]
+aap27.example.com
+# This section is for your AAP Controller host(s)
+# -----------------------------------------------------
+[automationcontroller]
+aap27.example.com
+# This section is for your AAP Automation Hub host(s)
+# -----------------------------------------------------
+[automationhub]
+aap27.example.com
+# This section is for your AAP EDA Controller host(s)
+# -----------------------------------------------------
+[automationeda]
+aap27.example.com
+# This section is for your AAP Lightspeed host(s)
+# -----------------------------------------------------
+# [ansiblelightspeed]
+# aap.example.org
+
+# This section is for your Ansible MCP Server host(s)
+# -----------------------------------------------------
+# [ansiblemcp]
+# aap.example.org
+
+# This section is for the AAP database
+# -----------------------------------------------------
+[automationmetrics]
+aap27.example.com
+
+[database]
+aap27.example.com
+
+[all:vars]
+# Ansible
+ansible_connection=local
+validate_certs=false
+
+# Common variables
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/containerized_installation/appendix-inventory-files-vars#general-variables
+# -----------------------------------------------------
+postgresql_admin_username=postgres
+postgresql_admin_password=redhat
+
+registry_username=fzhang@redhat.com
+registry_password=Foxconn88!@#$
+
+redis_mode=standalone
+
+
+
+#bundle_install=true
+# The bundle directory must include /bundle in the path
+#bundle_dir='{{ lookup("ansible.builtin.env", "PWD") }}/bundle'
+
+
+
+# AAP Gateway
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/containerized_installation/appendix-inventory-files-vars#platform-gateway-variables
+# -----------------------------------------------------
+gateway_admin_password=redhat
+gateway_pg_host=aap27.example.com
+gateway_pg_password=redhat
+
+# AAP Controller
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/containerized_installation/appendix-inventory-files-vars#controller-variables
+# -----------------------------------------------------
+controller_admin_password=redhat
+controller_pg_host=aap27.example.com
+controller_pg_password=redhat
+controller_percent_memory_capacity=0.5
+
+# AAP Automation Hub
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/containerized_installation/appendix-inventory-files-vars#hub-variables
+# -----------------------------------------------------
+hub_admin_password=redhat
+hub_pg_host=aap27.example.com
+hub_pg_password=redhat
+hub_seed_collections=false
+
+# AAP EDA Controller
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/containerized_installation/appendix-inventory-files-vars#event-driven-ansible-variables
+# -----------------------------------------------------
+eda_admin_password=redhat
+eda_pg_host=aap27.example.com
+eda_pg_password=redhat
+
+
+automationmetrics_pg_host=aap27.example.com
+automationmetrics_pg_password=redhat
+automationmetrics_controller_read_pg_host=aap27.example.com
+automationmetrics_controller_read_pg_password=redhat
+# AAP Lightspeed
+# https://docs.redhat.com/en/documentation/red_hat_ansible_automation_platform/2.6/html/containerized_installation/appendix-inventory-files-vars#lightspeed-variables
+# -----------------------------------------------------
+# lightspeed_admin_password=<set your own>
+# lightspeed_pg_host=aap.example.org
+# lightspeed_pg_password=<set your own>
+
+# In case chabot is enabled, default provider is "rhoai"
+# lightspeed_chatbot_model_url=<set your own>
+# lightspeed_chatbot_model_api_key=<set your own>
+# lightspeed_chatbot_model_id=<set your own>
+
+# In case "azure" provider
+# lightspeed_chatbot_default_provider = "azure"
+
+# In case "openai" provider
+# lightspeed_chatbot_default_provider = "openai"
+
+# lightspeed_mcp_controller_enabled=true
+# lightspeed_mcp_lightspeed_enabled=true
+# lightspeed_wca_model_api_key=<set your own>
+# lightspeed_wca_model_id=<set your own>
+[ansiblemcp]
+aap27.example.com
+
+# This section is for Ansible MCP server permissions
+# --------------------------------------------------
+[all:vars]
+mcp_allow_write_operations=true
+mcp_ignore_certificate_errors=true
+#mcp_tls_cert= <path to tls certificate>
+#mcp_tls_key= <path to tls key>
+```
+
+> 2.7 相对 2.6 的主要差异：`[automationmetrics]` 独立段、`registry_*` 在线拉取镜像（`bundle_install` 默认注释）、以及 Automation Metrics 相关 PG 变量。
+
+---
+
+## 执行安装 AAP
+
+编辑完上文 **`inventory-growth`** 后，在 bundle 目录以 **`admin`** 用户执行：
+
+```bash
+# 用户：admin · 示例目录：2.7 bundle
+cd /home/admin/ansible-automation-platform-containerized-setup-bundle-2.7-2-x86_64
+ansible-playbook -i inventory-growth ansible.containerized_installer.install
+```
+
+> 2.6 环境将 `cd` 路径改为 `.../ansible-automation-platform-containerized-setup-bundle-2.6-7-x86_64`。安装耗时与验证步骤见上文 **§3 执行安装**、**§4 安装后验证**。
 
 > **下一步**：[03-04 AAP 配置](03-04-AAP-Configuration-CN.md) — 激活许可、配置 UI 与 MCP Token
