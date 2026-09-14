@@ -1,6 +1,6 @@
 # AAP Server 部署
 
-> **状态**：20260608 Updated  
+> **状态**：20260914 Updated  
 > **系列**：AIOps DEMO Center 部署与配置分步指南  
 
 ## 本章概要
