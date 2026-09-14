@@ -53,15 +53,17 @@
 
 ### 1.2 定义变量
 
-在 root shell 执行：
-
 ```bash
-export AAP_SSH_HOST="10.210.65.24"
+# 用户：root · 节点：AAP 本机
+export AAP_SSH_HOST="10.210.65.46"   # 改成你的 AAP 节点 IP 或 FQDN
 ```
 
 ### 1.3 一键安装 Git、建用户、裸库与 SSH 授权
 
 ```bash
+# 用户：root · 节点：AAP 本机
+# 说明：创建 git 系统用户并授权 root 公钥；裸库归 git:git 所有
+
 dnf install -y git
 
 mkdir -p /var/lib/git
@@ -72,7 +74,8 @@ chown -R git:git /var/lib/git/eda-project.git
 
 mkdir -p /var/lib/git/.ssh
 touch /var/lib/git/.ssh/authorized_keys
-grep -qxF "$(cat /root/.ssh/id_rsa.pub)" /var/lib/git/.ssh/authorized_keys 2>/dev/null || cat /root/.ssh/id_rsa.pub >> /var/lib/git/.ssh/authorized_keys
+grep -qxF "$(cat /root/.ssh/id_rsa.pub)" /var/lib/git/.ssh/authorized_keys 2>/dev/null \
+  || cat /root/.ssh/id_rsa.pub >> /var/lib/git/.ssh/authorized_keys
 chown -R git:git /var/lib/git/.ssh
 chmod 700 /var/lib/git/.ssh
 chmod 600 /var/lib/git/.ssh/authorized_keys
@@ -83,37 +86,44 @@ chmod 750 /var/lib/git
 firewall-cmd --permanent --add-service=ssh 2>/dev/null; firewall-cmd --reload 2>/dev/null || true
 ```
 
-### 1.4 本机自测 SSH
+> SSH / SCM 连通性验证见 **5.0 Git SCM 连通性**。
 
-root 使用自己的私钥连接 `git@本机`：
-
-```bash
-ssh-keyscan -H "${AAP_SSH_HOST}" >> /root/.ssh/known_hosts 2>/dev/null
-ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes "git@${AAP_SSH_HOST}"
-```
-
-期望：能显示 `git` 用户的非交互 shell 提示或 Git 相关输出（公钥匹配）。若策略禁止 shell，以 AAP Project Sync 成功为准。
-
-### 1.5 工作区 + rulebooks 子目录 + 首次推送（main）
+### 1.4 工作区 + 首次推送（main）
 
 ```bash
+# 用户：root · 节点：AAP 本机
+# 工作区：/var/lib/git/work/eda-project · 裸库：/var/lib/git/eda-project.git
+
 mkdir -p /var/lib/git/work
-cd /var/lib/git/work
-rm -rf eda-project
+rm -rf /var/lib/git/work/eda-project
 GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
-  git clone "git@${AAP_SSH_HOST}:/var/lib/git/eda-project.git" eda-project
-cd /var/lib/git/work/eda-project
+  git clone "git@${AAP_SSH_HOST}:/var/lib/git/eda-project.git" /var/lib/git/work/eda-project
 
+cd /var/lib/git/work/eda-project
 git checkout -b main 2>/dev/null || git branch -M main
-mkdir -p rulebooks
-printf '%s\n' '# 将你的 rulebook YAML 放在此目录' > rulebooks/README.txt
-git add rulebooks
-git config user.email "root@aap26.example.com"
-git config user.name "aap26 lab"
-git commit -m "init: rulebooks/"
+
+# ① 先把已有 rulebook 资产放入 rulebooks/（内容见第 3 章），例如：
+#    01_eda_rule_linuxperformancealerts_ui.yml · TEST_01.yml · TEST_WEBHOOK.yml
+mkdir -p /var/lib/git/work/eda-project/rulebooks
+cp /path/to/your/*.yml /var/lib/git/work/eda-project/rulebooks/   # 按实际路径修改
+printf '%s\n' '# rulebook YAML 目录' > /var/lib/git/work/eda-project/rulebooks/README.txt
+ls -la /var/lib/git/work/eda-project/rulebooks/
+
+# ② 若远端已有 main（重跑本步骤），对齐远端后再追加 commit，勿重复 init
+git fetch origin 2>/dev/null || true
+if git rev-parse --verify origin/main >/dev/null 2>&1; then
+  git checkout main && git reset --hard origin/main
+fi
+
+git -C /var/lib/git/work/eda-project add rulebooks/
+git -C /var/lib/git/work/eda-project config user.email "root@aap27.example.com"
+git -C /var/lib/git/work/eda-project config user.name "aap27 lab"
+git -C /var/lib/git/work/eda-project commit -m "init: rulebooks/"
 GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
-  git push -u origin main
+  git -C /var/lib/git/work/eda-project push -u origin main
 ```
+
+> **提示**：首次 push 应包含第 3 章全部 rulebook YAML，不要只提交 `README.txt`。若 `git commit` 提示 *nothing to commit*，说明资产已在远端，直接进入第 2 章增量提交。
 
 ---
 
@@ -122,31 +132,26 @@ GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
 一次完整提交流程（可直接复制）：
 
 ```bash
-cd /var/lib/git/work/eda-project
+# 用户：root · 工作区：/var/lib/git/work/eda-project
 
-# 1) 确认当前分支是 main（与 EDA Project 配置一致）
-git branch --show-current
-git checkout main
+git -C /var/lib/git/work/eda-project branch --show-current
+git -C /var/lib/git/work/eda-project checkout main
+git -C /var/lib/git/work/eda-project status
 
-# 2) 查看变更
-git status
-
-# 3) 提交到本地仓库（从仓库根目录执行）
-git add rulebooks/rulebook_test.yml
-git commit -m "add: rulebook_test.yml for EDA"
-
-# 4) 推送到远端裸库
+git -C /var/lib/git/work/eda-project add /var/lib/git/work/eda-project/rulebooks/rulebook_test.yml
+git -C /var/lib/git/work/eda-project commit -m "add: rulebook_test.yml for EDA"
 GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
-  git push origin main
+  git -C /var/lib/git/work/eda-project push origin main
 ```
 
-若当前在 `/var/lib/git/work/eda-project/rulebooks` 目录下：
+若当前已在 `/var/lib/git/work/eda-project/rulebooks`：
 
 ```bash
-git add rulebook_test.yml
-git commit -m "add: rulebook_test.yml for EDA"
+# 用户：root
+git -C /var/lib/git/work/eda-project add /var/lib/git/work/eda-project/rulebooks/rulebook_test.yml
+git -C /var/lib/git/work/eda-project commit -m "add: rulebook_test.yml for EDA"
 GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
-  git push origin main
+  git -C /var/lib/git/work/eda-project push origin main
 ```
 
 推送后在 Gateway UI **Sync EDA Project**，再创建或更新 Rulebook Activation。
