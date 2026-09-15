@@ -480,10 +480,27 @@ receivers:
 
 ### 4.4 Rulebook Credentials
 
-配置用于认证 **EDA Rulebook** 的 Credentials。
+> UI 英文标题：**Config Credentials for rulebook action which need to connect to Automation Controller**
+
+配置 **Rulebook 中 action 触发时、EDA 连接 Automation Controller 所需的 Credentials**——**不是** Rulebook YAML 文件本身的认证，也**不是** Event Stream 入站 webhook 认证（后者见 **4.3**）。
+
+| 对比 | 用途 |
+| --- | --- |
+| **4.1 Git 凭据** | EDA Project 从 Git 拉取 rulebook |
+| **4.3 Event Stream 凭据** | Alertmanager / 外部系统 POST 事件到 Event Stream |
+| **4.4 本节凭据** | Rulebook **action** 执行时调用 **Automation Controller**（如 `run_job_template`） |
+
+当 Rulebook 使用 `run_job_template` 等需要 Controller 的 action 时（见第 3 章 AIOps 用例），EDA 须凭此 Credential 向 Controller 发起 API 请求（启动 Job Template）。未配置或配置错误时，Activation 可能收到事件但 **Job 无法启动**。
 
 <img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/3c5c16f4-1cd7-4f5e-91a6-dad0701f33d2" />
 
+路径：**Automation Decisions → Infrastructure → Credentials → Create / Edit**（类型为连接 Automation Controller 的凭据；创建 **Rulebook Activation** 时在 Controller 相关字段引用，见 **5.2**）。
+
+| 要点 | 说明 |
+| --- | --- |
+| **何时需要** | Rulebook 含 `run_job_template`（或同类 Controller action） |
+| **与 Job Template 关系** | 凭据负责 **EDA → Controller 鉴权**；Job Template 名称 / Organization 在 rulebook YAML 中指定，且须在 Controller 中 **预先创建** |
+| **DEMO 示例** | Rulebook 调用 `01_EDA_action_linuxperformancealerts_UI` 等模板前，确认本节凭据已在 Activation 中关联 |
 
 
 ### 4.5 EDA Event Stream
