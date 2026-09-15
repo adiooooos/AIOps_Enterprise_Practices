@@ -513,13 +513,29 @@ receivers:
 
 
 
-记录 Event Stream 的 **POST URL**（后续 Rulebook / 测试需用到）。DEMO 示例：
+在 UI 创建 Event Stream 后，**复制详情页中的 POST URL 并记录下来**，写入 Prometheus 侧 **`alertmanager.yml`** 的 `receivers`（`basic_auth` 与 **4.3** 保持一致）。
 
-```
-https://aap26.example.com:443/eda-event-streams/api/eda/v1/external_event_stream/a8e18ec4-ede4-43be-a3d9-dbc83701b811/post/
+```yaml
+# 接收器配置（/opt/alertmanager/alertmanager.yml 或等价路径）
+receivers:
+  - name: 'EDA'
+    webhook_configs:
+    - url: 'https://aap27.example.com:443/eda-event-streams/api/eda/v1/external_event_stream/552d1d26-6669-48d5-bc6e-0e5334ad6cee/post/'
+      send_resolved: false
+      http_config:
+        basic_auth:
+          username: "event_stream"
+          password: "redhat"
+        tls_config:
+          insecure_skip_verify: true
+      max_alerts: 0
 ```
 
-> UUID（`a8e18ec4-...`）以 UI 创建后实际值为准。
+| 项 | 说明 |
+| --- | --- |
+| **`url`** | 必须使用 UI 创建 Event Stream 后得到的 **实际 POST URL**（上例 UUID `552d1d26-...` 仅作格式参考，以你的环境为准） |
+| **`route.receiver`** | 顶层 `route` 中需指向 `'EDA'`，告警才会发到该 webhook |
+| **生效** | 修改后 reload：`curl -X POST http://localhost:9093/-/reload`（或重启 Alertmanager） |
 
 ---
 
