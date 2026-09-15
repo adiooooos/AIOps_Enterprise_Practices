@@ -583,6 +583,7 @@ GIT_SSH_COMMAND="ssh -i /root/.ssh/id_rsa -o IdentitiesOnly=yes" \
 
 1. 在 UI **Sync EDA Project**
 2. 配置 **Rulebook Activation**（关联 Event Stream、Rulebook 文件等）
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/4b0f4bb5-114b-4982-98ae-4ac105d1a0bd" />
 
 <img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/7dc9e40f-80b5-468b-b52d-7be3b39637d1" />
 
