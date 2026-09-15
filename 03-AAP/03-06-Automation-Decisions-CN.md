@@ -437,8 +437,9 @@ ls /tmp/eda-project-sync-test/rulebooks/
 ### 4.3 Event Stream Credentials
 
 配置用于认证 **EDA Event Stream** 的 Credentials；**Username / Password 必须与 Prometheus Alertmanager 的 `basic_auth` 严格一致**，否则 webhook 会返回 401，告警无法进入 EDA。
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/a328df6e-457b-4f55-a489-9be998604804" />
 
-<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/d14061c0-3609-42a9-b3f8-931cbc5364a7" />
+
 
 路径：**Automation Decisions → Infrastructure → Credentials → Create / Edit**
 
