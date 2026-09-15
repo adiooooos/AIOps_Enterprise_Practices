@@ -41,16 +41,28 @@ Writing manifest to image destination
 05ec79d62bc4c2ee6b7b53449e8e90944439f7a6967d77e78fcc9d1c409d5e07
 ```
 
-### 1.2 执行安装
+### 1.2 准备 host 目录
 
-```text
-### 执行安装：
-```
+`podman run` 使用 **bind mount** 时，host 侧目录**建议提前创建**并赋予 n8n 容器内 `node` 用户（UID **1000**）写权限；否则可能因目录不存在或权限不足导致启动失败、工作流/凭证无法持久化。
 
 ```bash
-[root@n8n ~]# podman run -d --name n8n --restart unless-stopped \
+# 用户：root · 节点：n8n server
+mkdir -p /opt/n8n/data /opt/n8n/files
+chown -R 1000:1000 /opt/n8n/data /opt/n8n/files
+```
+
+| Host 绝对路径 | 容器内路径 | 用途 |
+| --- | --- | --- |
+| `/opt/n8n/data` | `/home/node/.n8n` | n8n 配置、工作流、凭证、加密密钥等持久化数据 |
+| `/opt/n8n/files` | `/tmp` | 工作流临时文件 / 文件读写（按 DEMO 约定） |
+
+### 1.3 执行安装
+
+```bash
+# 用户：root · 节点：n8n server
+podman run -d --name n8n --restart unless-stopped \
   -p 8080:8080 \
-  -v n8n_data:/home/node/.n8n \
+  -v /opt/n8n/data:/home/node/.n8n \
   -v /opt/n8n/files:/tmp \
   -e N8N_LISTEN_ADDRESS=0.0.0.0 \
   -e N8N_PORT=8080 \
@@ -112,14 +124,13 @@ n8nio/n8n                   latest    b4261fdea416   2 days ago    978MB
 
 ### 2.3 本地部署 n8n
 
-```text
-本地部署n8n
-```
+离线镜像加载后，先完成 **1.2 准备 host 目录**（`/opt/n8n/data`、`/opt/n8n/files`），再执行：
 
 ```bash
-[root@n8n ~]# podman run -d --name n8n --restart unless-stopped \
+# 用户：root · 节点：n8n server
+podman run -d --name n8n --restart unless-stopped \
   -p 8080:8080 \
-  -v n8n_data:/home/node/.n8n \
+  -v /opt/n8n/data:/home/node/.n8n \
   -v /opt/n8n/files:/tmp \
   -e N8N_LISTEN_ADDRESS=0.0.0.0 \
   -e N8N_PORT=8080 \
