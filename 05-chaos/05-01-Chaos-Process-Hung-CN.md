@@ -1,6 +1,6 @@
 # Chaos — Use Case 1：Process Hung
 
-> **状态**：20260608 Updated  
+> **状态**：20260915 Updated  
 > **系列**：AIOps DEMO Center 部署与配置分步指南  
 
 ## 本章概要
@@ -313,3 +313,34 @@ python3 cpu_stress_webapp.py --duration 600
 
 > `--duration` 时间（秒）可任意设置。
 
+---
+
+## 依赖安装：`python3-psutil`
+
+`cpu_stress_webapp.py` 依赖 **`psutil`**。RHEL 9 上请安装 RPM **`python3-psutil`**（在 **AppStream** 仓库，不在 BaseOS；包名不是 `psutil`）。
+
+```bash
+# 用户：root · 节点：RHEL 9.2 Chaos Server
+
+# 1) 确认 AppStream 已启用
+dnf repolist | grep -i appstream
+
+# 2) 搜索包名（注意是 python3-psutil，不是 psutil）
+dnf search psutil
+
+# 3) 安装（默认 python3.9 模块）
+dnf install -y python3-psutil
+
+# 4) 验证
+python3 -c "import psutil; print(psutil.__version__)"
+```
+
+安装成功后，在 `/Fault_Simulation` 运行仿真：
+
+```bash
+# 用户：root
+cd /Fault_Simulation
+python3 cpu_stress_webapp.py --duration 600
+```
+
+若 `dnf install python3-psutil` 找不到包，检查 AppStream 是否启用及系统订阅是否正常；lab 临时备选：`python3 -m pip install --user psutil`。
