@@ -436,10 +436,45 @@ ls /tmp/eda-project-sync-test/rulebooks/
 
 ### 4.3 Event Stream Credentials
 
-配置用于认证 **EDA Event Stream** 的 Credentials。
+配置用于认证 **EDA Event Stream** 的 Credentials；**Username / Password 必须与 Prometheus Alertmanager 的 `basic_auth` 严格一致**，否则 webhook 会返回 401，告警无法进入 EDA。
+
 <img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/d14061c0-3609-42a9-b3f8-931cbc5364a7" />
 
+路径：**Automation Decisions → Infrastructure → Credentials → Create / Edit**
 
+| 字段 | DEMO 填写值 | 说明 |
+| --- | --- | --- |
+| **Name** | `event-stream` | 创建 Event Stream 时引用此凭据 |
+| **Organization** | `Default` | 与 Event Stream 同一 Organization |
+| **Credential type** | `Basic Event Stream` | 非 Source Control |
+| **Username** | `event_stream` | 与 Alertmanager `basic_auth.username` **完全一致** |
+| **Password** | `redhat` | 与 Alertmanager `basic_auth.password` **完全一致** |
+
+#### 与 Alertmanager 对齐
+
+Alertmanager 侧（`/opt/alertmanager/alertmanager.yml` 或等价路径）webhook 示例：
+
+```yaml
+receivers:
+  - name: 'EDA'
+    webhook_configs:
+    - url: 'https://aap26.example.com:443/eda-event-streams/api/eda/v1/external_event_stream/<UUID>/post/'
+      http_config:
+        basic_auth:
+          username: "event_stream"
+          password: "redhat"
+        tls_config:
+          insecure_skip_verify: true
+```
+
+| 配置位置 | 必须一致的项 |
+| --- | --- |
+| **AAP Credentials（本节）** | Username = `event_stream`，Password = `redhat` |
+| **Alertmanager `basic_auth`** | `username` / `password` 同上 |
+| **Event Stream POST URL** | 填入 Alertmanager `webhook_configs.url`（见 **4.5**） |
+| **手动测试 `curl -u`** | `-u 'event_stream:redhat'`（见 **5.3**） |
+
+> 修改任一侧的用户名或密码后，**AAP Credentials 与 Alertmanager 必须同步更新**，并 reload Alertmanager（`curl -X POST http://localhost:9093/-/reload` 或重启服务）。
 
 
 ### 4.4 Rulebook Credentials
