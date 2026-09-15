@@ -507,6 +507,8 @@ receivers:
 
 配置 EDA Event Stream。
 
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/cae9f62c-856f-46cc-b990-6baca54ccf9a" />
+
 <img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/8b482df1-8de9-488f-af8e-c06a0679b186" />
 
 
