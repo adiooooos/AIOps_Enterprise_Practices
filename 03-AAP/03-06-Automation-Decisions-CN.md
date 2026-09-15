@@ -617,6 +617,80 @@ curl -k -X POST \
 
 ---
 
+### 5.5 测试 Rulebook01：Linux Perf Alerts（`TEST_01.yml`）
+
+用于验证 **Linux 性能类告警** 经 Event Stream 进入 EDA 后，Rulebook 能否正确接收并 **完整打印 `event.payload`**。对应 Rulebook：**`rulebooks/TEST_01.yml`**（定义见 **3.1**）。
+
+| 项 | 说明 |
+| --- | --- |
+| **Rulebook 文件** | `rulebooks/TEST_01.yml` |
+| **Activation 名称（示例）** | `rulebook01_linux_perf_alerts` 或自定义 |
+| **关联 Event Stream** | **4.5** 创建的 Event Stream |
+| **Controller 凭据** | 本节仅 `debug` / `print_event`，**无需** **4.4**（无 `run_job_template`） |
+
+#### 配置 Rulebook Activation
+
+1. **Sync EDA Project**（确认已含 `TEST_01.yml`）
+2. **Automation Decisions → Rulebook Activations → Create**
+3. 选择 Rulebook：**`TEST_01.yml`**（或 UI 显示名 *Linux Performance Alerts Remediation*）
+4. 绑定 **Event Stream**；保存并确认状态 **Running**
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/31b2e341-e104-465a-adfd-28a1914341d7" />
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/36a3b978-916b-46fa-aa6d-ef0f60094669" />
+
+
+#### 发送测试事件
+
+**方式 A — `curl` 模拟 Alertmanager webhook**（POST URL 与 **4.5** / **5.3** 一致）：
+
+```bash
+curl -k -X POST \
+  'https://aap27.example.com:443/eda-event-streams/api/eda/v1/external_event_stream/552d1d26-6669-48d5-bc6e-0e5334ad6cee/post/' \
+  -u 'event_stream:redhat' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "receiver": "EDA",
+    "status": "firing",
+    "groupLabels": {
+      "alertname": "HighSystemCpuUsage",
+      "instance": "10.210.65.148:9100"
+    },
+    "commonLabels": {
+      "alertname": "HighSystemCpuUsage",
+      "severity": "warning",
+      "instance_name": "chaos.example.com"
+    },
+    "alerts": [{
+      "status": "firing",
+      "labels": {
+        "alertname": "HighSystemCpuUsage",
+        "instance": "10.210.65.148:9100",
+        "instance_name": "chaos.example.com",
+        "severity": "warning"
+      },
+      "annotations": {
+        "summary": "Linux perf alert test for TEST_01"
+      }
+    }]
+  }'
+```
+
+**方式 B — 真实告警**：在 Prometheus 触发 `HighSystemCpuUsage` / `CriticalSystemCpuUsage`，经 **Alertmanager → EDA webhook**（**4.3** + **4.5**）投递。
+
+#### 确认结果
+
+**Automation Decisions → Rule Audit**（或对应 Activation 的 Events 详情）中应看到：
+
+| 输出 | 来源 |
+| --- | --- |
+| `Received event payload: {{ event.payload }}` | Rule `debug` action |
+| 格式化完整事件 | Rule `print_event: pretty: true` |
+
+通过标准：`event.payload` 中含 `status`、`groupLabels`、`commonLabels`、`alerts` 等 Alertmanager 字段；Activation 规则 **Linux perf alerts — AAP Event Stream payload** 命中且无报错。
+
+---
+
+
+
 ## 配置后检查清单
 
 | # | 检查项 | 通过标准 |
