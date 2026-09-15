@@ -673,6 +673,8 @@ curl -k -X POST \
     }]
   }'
 ```
+<img width="2560" height="1347" alt="image" src="https://github.com/user-attachments/assets/b81e03b6-0299-4ca4-a9de-8c17bf44641d" />
+
 
 **方式 B — 真实告警**：在 Prometheus 触发 `HighSystemCpuUsage` / `CriticalSystemCpuUsage`，经 **Alertmanager → EDA webhook**（**4.3** + **4.5**）投递。
 
